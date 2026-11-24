@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ADMINメール</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= yield :head %>
+    <link rel="icon" href="/icon.png" type="image/png">
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="bg-gray-50 text-gray-900">
+    <% if Current.user %>
+      <header class="bg-slate-800 text-white">
+        <div class="flex items-center justify-between px-5 py-3">
+          <span class="font-bold">ADMINメール</span>
+          <span class="text-sm text-slate-300 flex items-center gap-4">
+            <%= Current.user.email_address %>
+            <%= button_to "ログアウト", session_path, method: :delete, class: "text-slate-200 hover:text-white cursor-pointer" %>
+          </span>
+        </div>
+      </header>
+      <div class="flex items-start">
+        <aside class="w-52 shrink-0 bg-white border-r border-gray-200 min-h-screen py-3">
+          <nav>
+            <%= sidebar_heading "メール" %>
+            <%= sidebar_link_to "受信トレイ", emails_path, active: controller_name == "emails" && action_name == "index" %>
+            <%= sidebar_link_to "個別送信", new_email_path, active: controller_name == "emails" && action_name == "new" %>
+            <%= sidebar_link_to "一斉送信", broadcast_emails_path, active: controller_name == "emails" && action_name == "broadcast" %>
+            <%= sidebar_link_to "送信済み", sent_emails_path, active: controller_name == "emails" && action_name == "sent" %>
+            <%= sidebar_heading "管理" %>
+            <%= sidebar_link_to "様式（テンプレート）", mail_templates_path, active: controller_name == "mail_templates" %>
+            <%= sidebar_link_to "パスワード変更", edit_password_change_path, active: controller_name == "password_changes" %>
+          </nav>
+        </aside>
+        <main class="flex-1 px-6 py-6 min-w-0">
+          <% if notice %>
+            <p class="py-2 px-3 bg-green-50 mb-5 text-green-600 font-medium rounded-lg"><%= notice %></p>
+          <% end %>
+          <% if alert %>
+            <p class="py-2 px-3 bg-red-50 mb-5 text-red-500 font-medium rounded-lg"><%= alert %></p>
+          <% end %>
+          <%= yield %>
+        </main>
+      </div>
+    <% else %>
+      <main class="px-4 py-10">
+        <% if notice %>
+          <p class="py-2 px-3 bg-green-50 mb-5 text-green-600 font-medium rounded-lg mx-auto max-w-md"><%= notice %></p>
+        <% end %>
+        <% if alert %>
+          <p class="py-2 px-3 bg-red-50 mb-5 text-red-500 font-medium rounded-lg mx-auto max-w-md"><%= alert %></p>
+        <% end %>
+        <%= yield %>
+      </main>
+    <% end %>
+  </body>
+</html>

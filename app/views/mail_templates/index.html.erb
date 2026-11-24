@@ -1,0 +1,33 @@
+<div class="mx-auto max-w-4xl">
+  <div class="flex items-center justify-between mb-5">
+    <h1 class="font-bold text-3xl">様式（テンプレート）</h1>
+    <%= link_to "様式を追加", new_mail_template_path, class: "rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium" %>
+  </div>
+
+  <table class="w-full text-left bg-white text-sm">
+    <thead>
+      <tr class="border-b border-gray-200 text-gray-500">
+        <th class="py-2 pr-4">様式名</th>
+        <th class="py-2 pr-4">ヘッダー</th>
+        <th class="py-2 pr-4">フッター連絡先</th>
+        <th class="py-2"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @mail_templates.each do |template| %>
+        <tr class="border-b border-gray-100">
+          <td class="py-2 pr-4">
+            <span class="inline-block w-3 h-3 rounded-full mr-1" style="background-color: <%= template.header_color %>"></span>
+            <%= template.name %>
+          </td>
+          <td class="py-2 pr-4"><%= template.brand_name %><span class="text-gray-400 ml-2"><%= template.tagline %></span></td>
+          <td class="py-2 pr-4"><%= template.footer_email %></td>
+          <td class="py-2 whitespace-nowrap">
+            <%= link_to "編集", edit_mail_template_path(template), class: "text-blue-600 hover:underline" %>
+            <%= button_to "削除", template, method: :delete, data: { turbo_confirm: "この様式を削除しますか？" }, class: "text-red-600 hover:underline cursor-pointer inline ml-3" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

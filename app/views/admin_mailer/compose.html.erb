@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<body style="margin:0; padding:24px 0; background-color:#f5f0e8;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden;">
+          <% if @template %>
+            <tr>
+              <td style="background-color:<%= @template.header_color %>; padding:20px 28px;">
+                <span style="color:#ffffff; font-size:20px; font-weight:bold;"><%= @template.brand_name %></span>
+                <% if @template.tagline.present? %>
+                  <span style="color:#f59e0b; font-size:13px; font-weight:bold; margin-left:10px;"><%= @template.tagline %></span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+          <tr>
+            <td style="padding:28px; color:#333333; font-size:14px; line-height:1.8;">
+              <%= simple_format(h(@sent_email.body)) %>
+            </td>
+          </tr>
+          <% if @template %>
+            <tr>
+              <td style="padding:20px 28px; border-top:1px solid #e5e0d5; color:#666666; font-size:12px; line-height:1.7;">
+                <%= @template.brand_name %><br>
+                <% if @template.footer_company.present? %>運営会社：<%= @template.footer_company %><br><% end %>
+                <% if @template.footer_address.present? %><%= @template.footer_address %><br><% end %>
+                <% if @template.footer_email.present? %><%= @template.footer_email %><br><% end %>
+                <% if @template.footer_url.present? %><a href="<%= @template.footer_url %>" style="color:#666666;"><%= @template.footer_url %></a><% end %>
+              </td>
+            </tr>
+          <% end %>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

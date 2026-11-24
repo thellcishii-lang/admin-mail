@@ -1,0 +1,43 @@
+# Render Blueprint for admin-mail (ADMINメール)
+# Same lessons as the other products: paid plans from day one, secrets are
+# dashboard-only (sync: false), mail via Zoho (INFOMAIL_USER / INFOMAIL_PASS).
+services:
+  - type: web
+    name: admin-mail
+    runtime: docker
+    plan: starter
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /up
+    autoDeploy: true
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: SECRET_KEY_BASE
+        generateValue: true
+      - key: SOLID_QUEUE_IN_PUMA
+        value: "true"
+      - key: RUN_SEED_IF_EMPTY
+        value: "true"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: admin-mail-db
+          property: connectionString
+      # Mail account (Zoho). INFOMAIL_USER doubles as the IMAP user and the
+      # default From address; set IMAP_USER / IMAP_PASS / MAIL_FROM in the
+      # dashboard only if a different account or address is needed.
+      - key: INFOMAIL_USER
+        sync: false
+      - key: INFOMAIL_PASS
+        sync: false
+      - key: OPERATOR_EMAIL
+        sync: false
+      - key: APP_HOST
+        sync: false
+
+databases:
+  - name: admin-mail-db
+    databaseName: admin_mail_production
+    plan: basic-256mb
+    region: singapore

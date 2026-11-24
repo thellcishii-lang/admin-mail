@@ -1,0 +1,11 @@
+<div class="my-5">
+  <p class="font-medium mb-2">添付ファイル</p>
+  <div data-controller="file-drop"
+       data-action="click->file-drop#open dragover->file-drop#highlight dragleave->file-drop#unhighlight drop->file-drop#drop"
+       class="border-2 border-dashed border-gray-300 rounded-lg px-4 py-6 text-center text-sm text-gray-500 cursor-pointer">
+    <p>📎 ここにファイルをドラッグ＆ドロップ（クリックでも選べます・複数可）</p>
+    <p data-file-drop-target="list" class="mt-2 text-gray-700"></p>
+    <%= file_field_tag "attachments[]", multiple: true, class: "hidden",
+          data: { file_drop_target: "input", action: "change->file-drop#changed" } %>
+  </div>
+</div>

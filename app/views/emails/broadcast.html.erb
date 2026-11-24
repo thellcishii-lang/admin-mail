@@ -1,0 +1,33 @@
+<div class="mx-auto max-w-3xl">
+  <h1 class="font-bold text-3xl mb-2">📣 メール一斉送信</h1>
+  <p class="text-gray-500 text-sm mb-5">複数の宛先へ、同じ内容を1件ずつ送信します（宛先同士は見えません）。1回につき最大<%= EmailsController::MAX_BROADCAST_RECIPIENTS %>件まで。</p>
+
+  <% if @email.errors.any? %>
+    <div class="py-2 px-3 bg-red-50 mb-5 text-red-500 font-medium rounded-lg">
+      <ul><% @email.errors.full_messages.each do |m| %><li><%= m %></li><% end %></ul>
+    </div>
+  <% end %>
+
+  <%= form_with model: @email, url: send_broadcast_emails_path, multipart: true, class: "bg-white border border-gray-200 rounded-lg p-5" do |form| %>
+    <div class="my-5">
+      <label for="recipients" class="font-medium">宛先（1行に1件、またはカンマ区切り）</label>
+      <%= text_area_tag :recipients, params[:recipients], rows: 5, required: true, class: "block shadow-sm rounded-md border border-gray-400 px-3 py-2 mt-2 w-full" %>
+    </div>
+
+    <%= render "template_picker", form: form, templates: @templates %>
+
+    <div class="my-5">
+      <%= form.label :subject, "件名", class: "font-medium" %>
+      <%= form.text_field :subject, required: true, class: "block shadow-sm rounded-md border border-gray-400 px-3 py-2 mt-2 w-full" %>
+    </div>
+
+    <div class="my-5">
+      <%= form.label :body, "本文", class: "font-medium" %>
+      <%= form.text_area :body, required: true, rows: 12, class: "block shadow-sm rounded-md border border-gray-400 px-3 py-2 mt-2 w-full" %>
+    </div>
+
+    <%= render "attachments_field" %>
+
+    <%= form.submit "一斉送信する", class: "rounded-md px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium cursor-pointer" %>
+  <% end %>
+</div>

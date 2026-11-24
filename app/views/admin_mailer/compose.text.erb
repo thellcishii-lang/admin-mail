@@ -1,8 +1,0 @@
-<%= @sent_email.body %>
-
---
-<% if @template %><%= @template.brand_name %>
-<% if @template.footer_company.present? %>運営会社：<%= @template.footer_company %>
-<% end %><% if @template.footer_address.present? %><%= @template.footer_address %>
-<% end %><% if @template.footer_email.present? %><%= @template.footer_email %>
-<% end %><% if @template.footer_url.present? %><%= @template.footer_url %><% end %><% end %>

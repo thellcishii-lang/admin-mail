@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listInbox, imapConfigured, NotConfiguredError, ADDRESSES } from "@/lib/mailbox";
+import { deleteMessageAction } from "@/lib/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -8,12 +9,18 @@ function fmtDate(d) {
   return new Date(d).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
+const FOLDERS = [
+  ["inbox", "受信トレイ"],
+  ["spam", "迷惑メール"],
+  ["trash", "削除済み"],
+];
+
 const pill = (active) =>
   `rounded-full border px-3 py-1.5 text-sm ${active ? "border-slate-800 bg-slate-800 text-white" : "border-slate-300 bg-white hover:bg-slate-50"}`;
 
 export default async function InboxPage({ searchParams }) {
   const sp = await searchParams;
-  const folder = sp?.folder === "spam" ? "spam" : "inbox";
+  const folder = FOLDERS.some(([k]) => k === sp?.folder) ? sp.folder : "inbox";
   const address = ADDRESSES.includes(sp?.to) ? sp.to : null;
 
   let messages = null, error = null;
@@ -23,24 +30,28 @@ export default async function InboxPage({ searchParams }) {
     error = e;
   }
 
-  const qs = (params) => {
-    const q = new URLSearchParams(params);
+  const qs = (f, a) => {
+    const q = new URLSearchParams();
+    if (f !== "inbox") q.set("folder", f);
+    if (a) q.set("to", a);
     const s = q.toString();
     return s ? `/?${s}` : "/";
   };
+  const backUrl = qs(folder, address);
 
   return (
     <div>
-      <h1 className="text-lg font-bold">{folder === "spam" ? "迷惑メール" : "受信トレイ"}</h1>
+      <h1 className="text-lg font-bold">{FOLDERS.find(([k]) => k === folder)[1]}</h1>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Link href={qs(address ? { to: address } : {})} className={pill(folder === "inbox")}>受信トレイ</Link>
-        <Link href={qs(address ? { folder: "spam", to: address } : { folder: "spam" })} className={pill(folder === "spam")}>迷惑メール</Link>
+        {FOLDERS.map(([key, label]) => (
+          <Link key={key} href={qs(key, address)} className={pill(folder === key)}>{label}</Link>
+        ))}
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <Link href={qs(folder === "spam" ? { folder: "spam" } : {})} className={pill(!address)}>すべて</Link>
+        <Link href={qs(folder, null)} className={pill(!address)}>すべて</Link>
         {ADDRESSES.map((a) => (
-          <Link key={a} href={qs(folder === "spam" ? { folder: "spam", to: a } : { to: a })} className={pill(address === a)}>{a}</Link>
+          <Link key={a} href={qs(folder, a)} className={pill(address === a)}>{a}</Link>
         ))}
       </div>
 
@@ -55,14 +66,20 @@ export default async function InboxPage({ searchParams }) {
       ) : (
         <ul className="mt-4 divide-y divide-slate-200 rounded-xl bg-white shadow">
           {messages.map((m) => (
-            <li key={m.uid}>
-              <Link href={`/inbox/${m.uid}${folder === "spam" ? "?folder=spam" : ""}`} className="flex items-baseline gap-3 px-4 py-3 hover:bg-slate-50">
+            <li key={m.uid} className="flex items-stretch hover:bg-slate-50">
+              <Link href={`/inbox/${m.uid}${folder !== "inbox" ? `?folder=${folder}` : ""}`} className="flex min-w-0 flex-1 items-baseline gap-3 px-4 py-3">
                 <span className={m.seen ? "text-transparent" : "text-sky-500"}>●</span>
                 <span className={`w-56 shrink-0 truncate text-sm ${m.seen ? "text-slate-500" : "font-medium"}`}>{m.from}</span>
                 <span className={`min-w-0 flex-1 truncate text-sm ${m.seen ? "text-slate-500" : "font-medium"}`}>{m.subject}</span>
                 <span className="hidden w-48 shrink-0 truncate text-xs text-slate-400 lg:block">宛先: {m.to}</span>
                 <span className="shrink-0 text-xs text-slate-400">{fmtDate(m.date)}</span>
               </Link>
+              <form action={deleteMessageAction} className="flex items-center pr-3">
+                <input type="hidden" name="uid" value={m.uid} />
+                <input type="hidden" name="folder" value={folder} />
+                <input type="hidden" name="back" value={backUrl} />
+                <button title={folder === "trash" ? "完全に削除" : "削除（削除済みへ）"} className="rounded px-2 py-1 text-sm text-slate-400 hover:bg-red-50 hover:text-red-600">削除</button>
+              </form>
             </li>
           ))}
         </ul>

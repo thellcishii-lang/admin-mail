@@ -34,6 +34,7 @@ export default async function InboxPage() {
                 <span className={m.seen ? "text-transparent" : "text-sky-500"}>●</span>
                 <span className={`w-56 shrink-0 truncate text-sm ${m.seen ? "text-slate-500" : "font-medium"}`}>{m.from}</span>
                 <span className={`min-w-0 flex-1 truncate text-sm ${m.seen ? "text-slate-500" : "font-medium"}`}>{m.subject}</span>
+                <span className="hidden w-48 shrink-0 truncate text-xs text-slate-400 lg:block">宛先: {m.to}</span>
                 <span className="shrink-0 text-xs text-slate-400">{fmtDate(m.date)}</span>
               </Link>
             </li>

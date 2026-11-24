@@ -7,6 +7,7 @@ const FIELDS = [
   ["name", "様式名"], ["brand_name", "ブランド名（ヘッダー表示）"], ["tagline", "タグライン"],
   ["header_color", "ヘッダー色（#RRGGBB）"], ["from_name", "送信者名"], ["footer_company", "フッター会社名"],
   ["footer_address", "フッター住所"], ["footer_email", "フッターメール"], ["footer_url", "フッターURL"],
+  ["from_address", "送信元アドレス"],
 ];
 
 function TemplateForm({ template }) {

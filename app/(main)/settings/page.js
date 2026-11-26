@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
-import { listMailboxes } from "@/lib/mailboxes";
+import { listMailboxes, mailboxLimitFor } from "@/lib/mailboxes";
 import { saveMailboxAction, deleteMailboxAction } from "@/lib/actions";
 
 export const dynamic = "force-dynamic";
@@ -76,10 +76,11 @@ export default async function SettingsPage({ searchParams }) {
   if (user.kind !== "admin") redirect("/");
   const sp = await searchParams;
   const boxes = await listMailboxes(user.accountId);
+  const limit = await mailboxLimitFor(user.accountId);
   return (
     <div>
-      <h1 className="text-lg font-bold">アドレス設定</h1>
-      <p className="mt-1 text-sm text-slate-500">会社のメールアドレスを登録します。各アドレスは、そのアドレスとパスワードでログインして送受信できます。</p>
+      <h1 className="text-lg font-bold">アドレス設定（{boxes.length}/{limit}）</h1>
+      <p className="mt-1 text-sm text-slate-500">会社のメールアドレスを登録します。各アドレスは、そのアドレスとパスワードでログインして送受信できます。アドレスは{limit}個まで追加できます（追加は1口2,500円/月で+10個、同じアカウントの中で増えます）。</p>
       {sp?.welcome && <p className="mt-3 rounded bg-emerald-50 px-3 py-2 text-sm text-emerald-700">申込が完了しました。アドレスの受信（IMAP）・送信（SMTP）サーバーを登録すると、そのアドレスで送受信できるようになります。</p>}
       {sp?.done && <p className="mt-3 rounded bg-emerald-50 px-3 py-2 text-sm text-emerald-700">保存しました</p>}
       {sp?.error && <p className="mt-3 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{sp.error}</p>}
@@ -99,10 +100,14 @@ export default async function SettingsPage({ searchParams }) {
             </div>
           </details>
         ))}
-        <details className="rounded-xl bg-white p-5 shadow" open={boxes.length === 0}>
-          <summary className="cursor-pointer font-medium">＋ アドレスを追加</summary>
-          <div className="mt-4"><MailboxForm box={null} /></div>
-        </details>
+        {boxes.length < limit ? (
+          <details className="rounded-xl bg-white p-5 shadow" open={boxes.length === 0}>
+            <summary className="cursor-pointer font-medium">＋ アドレスを追加</summary>
+            <div className="mt-4"><MailboxForm box={null} /></div>
+          </details>
+        ) : (
+          <p className="rounded-xl bg-white p-5 text-sm text-slate-500 shadow">アドレスは{limit}個までです。追加は1口2,500円/月で+10個できます。</p>
+        )}
       </div>
     </div>
   );

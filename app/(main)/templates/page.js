@@ -3,6 +3,7 @@ import { saveTemplateAction, deleteTemplateAction, createTemplateFromStyleAction
 import { requireUser } from "@/lib/auth";
 import { PRESET_STYLES } from "@/lib/styles";
 import { listImages, parseWatermarkConfig } from "@/lib/images";
+import { TemplatePreviewButton } from "@/components/MailPreview";
 
 function StyleGallery({ company }) {
   return (
@@ -97,9 +98,17 @@ function TemplateForm({ template, images = [], watermarks = [] }) {
                     <option key={im.id} value={`img:${im.id}`}>{im.name || `画像${im.id}`}</option>
                   ))}
                 </select>
-                <select name={`wm${i}_position`} defaultValue={w.position || "center"} className={inputCls}>
-                  {WM_POSITION_LABELS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                </select>
+                <div className="mt-1">
+                  <div className="grid w-[74px] grid-cols-3 gap-0.5" title="透かしの位置">
+                    {WM_POSITION_LABELS.map(([v, l]) => (
+                      <label key={v} title={l} className="cursor-pointer">
+                        <input type="radio" name={`wm${i}_position`} value={v} defaultChecked={(w.position || "center") === v} className="peer sr-only" />
+                        <span className="block h-[22px] rounded border border-slate-300 bg-white peer-checked:border-slate-800 peer-checked:bg-slate-800"></span>
+                      </label>
+                    ))}
+                  </div>
+                  <span className="text-[11px] text-slate-400">位置（マス目）</span>
+                </div>
                 <select name={`wm${i}_size`} defaultValue={String(w.size || 55)} className={inputCls}>
                   {[25, 40, 55, 75, 100].map((s) => <option key={s} value={s}>大きさ {s}%</option>)}
                 </select>
@@ -239,10 +248,14 @@ export default async function TemplatesPage({ searchParams }) {
             </summary>
             <div className="mt-4">
               <TemplateForm template={t} images={libraryImages} watermarks={effectiveWatermarks(t)} />
-              <form action={deleteTemplateAction} className="mt-3">
-                <input type="hidden" name="id" value={t.id} />
-                <button className="text-sm text-red-600 hover:underline">この様式を削除</button>
-              </form>
+              <div className="mt-3 flex items-center gap-4">
+                <TemplatePreviewButton templateId={t.id} sampleImageId={libraryImages[0]?.id || null} />
+                <form action={deleteTemplateAction}>
+                  <input type="hidden" name="id" value={t.id} />
+                  <button className="text-sm text-red-600 hover:underline">この様式を削除</button>
+                </form>
+              </div>
+              <p className="mt-1 text-xs text-slate-400">プレビューは保存済みの設定で表示されます。変更したら先に「更新」を押してください。</p>
             </div>
           </details>
         ))}

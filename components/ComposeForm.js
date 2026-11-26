@@ -2,28 +2,34 @@
 
 import { useRef, useState } from "react";
 import { sendOneAction, broadcastAction } from "@/lib/actions";
+import { PreviewModal, fetchPreviewHtml } from "@/components/MailPreview";
+import BodyEditor from "@/components/BodyEditor";
 
 export default function ComposeForm({ templates, defaults = {}, broadcast = false, error = null, initialImages = [] }) {
   const [templateId, setTemplateId] = useState(defaults.templateId || templates[0]?.id || "");
   const [files, setFiles] = useState([]);
   const fileRef = useRef(null);
-  const bodyRef = useRef(null);
+  const bodyEditorRef = useRef(null);
+  const [bodyValue, setBodyValue] = useState(defaults.body || "");
   const imageInputRef = useRef(null);
   const [images, setImages] = useState(initialImages);
   const [imageError, setImageError] = useState("");
+  const [previewHtml, setPreviewHtml] = useState("");
+  const [previewBusy, setPreviewBusy] = useState(false);
+
+  async function openPreview() {
+    setPreviewBusy(true);
+    try {
+      setPreviewHtml(await fetchPreviewHtml(Number(templateId), bodyValue));
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setPreviewBusy(false);
+    }
+  }
 
   function insertMarker(id) {
-    const ta = bodyRef.current;
-    const marker = `[画像:${id}]`;
-    if (!ta) return;
-    const start = ta.selectionStart ?? ta.value.length;
-    const end = ta.selectionEnd ?? ta.value.length;
-    const before = ta.value.slice(0, start);
-    const prefix = before && !before.endsWith("\n") ? "\n" : "";
-    ta.value = before + prefix + marker + "\n" + ta.value.slice(end);
-    ta.focus();
-    const pos = (before + prefix + marker).length;
-    ta.setSelectionRange(pos, pos);
+    bodyEditorRef.current?.insertImage(id);
   }
 
   async function uploadImages(fileList) {
@@ -100,12 +106,15 @@ export default function ComposeForm({ templates, defaults = {}, broadcast = fals
 
       <div>
         <label className="text-sm font-medium">本文</label>
-        <textarea ref={bodyRef} name="body" required rows={12} defaultValue={defaults.body || ""} className={inputCls} />
+        <div className="mt-1">
+          <BodyEditor ref={bodyEditorRef} initialBody={defaults.body || ""} images={images} onChange={setBodyValue} />
+        </div>
+        <input type="hidden" name="body" value={bodyValue} />
       </div>
 
       <div>
         <p className="text-sm font-medium">本文の画像（デザイン用）</p>
-        <p className="mt-1 text-xs text-slate-500">画像を登録して「挿入」を押すと、本文のカーソル位置に差し込まれます。バナーや区切り画像を何枚でも組み合わせられます（1枚1MBまで・30枚まで）。</p>
+        <p className="mt-1 text-xs text-slate-500">画像を登録して「挿入」を押すと、本文の選んだブロックの下に差し込まれます。バナーや区切り画像を何枚でも組み合わせられます（1枚1MBまで・30枚まで）。</p>
         {imageError && <p className="mt-2 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{imageError}</p>}
         <div className="mt-2 flex flex-wrap gap-3">
           {images.map((im) => (
@@ -142,7 +151,14 @@ export default function ComposeForm({ templates, defaults = {}, broadcast = fals
         </div>
       )}
 
-      <button className="rounded bg-slate-800 px-6 py-2 font-medium text-white hover:bg-slate-700">{broadcast ? "一斉送信する" : "送信する"}</button>
+      <div className="flex items-center gap-3">
+        <button className="rounded bg-slate-800 px-6 py-2 font-medium text-white hover:bg-slate-700">{broadcast ? "一斉送信する" : "送信する"}</button>
+        <button type="button" onClick={openPreview} disabled={previewBusy}
+          className="rounded border border-slate-300 px-5 py-2 font-medium hover:bg-slate-50 disabled:opacity-50">
+          {previewBusy ? "作成中…" : "プレビュー"}
+        </button>
+      </div>
+      <PreviewModal html={previewHtml} onClose={() => setPreviewHtml("")} />
     </form>
   );
 }

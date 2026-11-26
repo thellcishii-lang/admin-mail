@@ -13,6 +13,7 @@ const FIELDS = [
 
 function TemplateForm({ template }) {
   const inputCls = "mt-1 w-full rounded border border-slate-300 px-3 py-1.5 text-sm";
+  const checkCls = "flex items-center gap-2 text-sm text-slate-600";
   return (
     <form action={saveTemplateAction} className="grid grid-cols-2 gap-3">
       {template && <input type="hidden" name="id" value={template.id} />}
@@ -22,6 +23,23 @@ function TemplateForm({ template }) {
           <input name={name} defaultValue={template?.[name] || ""} required={name === "name"} className={inputCls} />
         </div>
       ))}
+      <div className="col-span-2 border-t border-slate-100 pt-3">
+        <label className="text-xs font-medium text-slate-500">会社ロゴ（PNG / JPEG / GIF / WebP、500KBまで）</label>
+        {template?.has_logo && (
+          <div className="mt-2 flex items-center gap-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/logo/${template.id}`} alt="ロゴ" className="h-10 border border-slate-200 bg-white object-contain px-2" />
+            <label className={checkCls}><input type="checkbox" name="logo_remove" value="1" /> ロゴを削除</label>
+          </div>
+        )}
+        <input name="logo" type="file" accept="image/png,image/jpeg,image/gif,image/webp" className="mt-2 block text-sm" />
+        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
+          <label className={checkCls}><input type="checkbox" name="logo_header" defaultChecked={template?.logo_header} /> ヘッダーに入れる</label>
+          <label className={checkCls}><input type="checkbox" name="logo_footer" defaultChecked={template?.logo_footer} /> 一番下（フッター）に入れる</label>
+          <label className={checkCls}><input type="checkbox" name="logo_background" defaultChecked={template?.logo_background} /> 本文の背景に薄く入れる</label>
+        </div>
+        <p className="mt-1 text-xs text-slate-400">背景の透かしは、対応するメールソフトでのみ表示されます。</p>
+      </div>
       <div className="col-span-2">
         <button className="rounded bg-slate-800 px-4 py-1.5 text-sm font-medium text-white hover:bg-slate-700">{template ? "更新" : "追加"}</button>
       </div>
@@ -29,13 +47,19 @@ function TemplateForm({ template }) {
   );
 }
 
-export default async function TemplatesPage() {
+export default async function TemplatesPage({ searchParams }) {
   await ensureReady();
   const user = await requireUser();
-  const { rows } = await db().query("SELECT * FROM mail_templates WHERE account_id = $1 ORDER BY position, id", [user.accountId]);
+  const sp = await searchParams;
+  const { rows } = await db().query(
+    `SELECT id, name, brand_name, tagline, header_color, from_name, footer_company, footer_address,
+            footer_email, footer_url, from_address, logo_header, logo_footer, logo_background,
+            (logo_base64 <> '') AS has_logo
+     FROM mail_templates WHERE account_id = $1 ORDER BY position, id`, [user.accountId]);
   return (
     <div>
       <h1 className="text-lg font-bold">様式（テンプレート）</h1>
+      {sp?.error && <p className="mt-3 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{sp.error}</p>}
       <div className="mt-4 space-y-4">
         {rows.map((t) => (
           <details key={t.id} className="rounded-xl bg-white p-5 shadow">

@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { listMailboxes, mailboxLimitFor } from "@/lib/mailboxes";
-import { saveMailboxAction, deleteMailboxAction } from "@/lib/actions";
+import { saveMailboxAction, deleteMailboxAction, regenerateLinkKeyAction } from "@/lib/actions";
+import { ensureLinkKey } from "@/lib/link";
 
 export const dynamic = "force-dynamic";
 
@@ -77,11 +78,23 @@ export default async function SettingsPage({ searchParams }) {
   const sp = await searchParams;
   const boxes = await listMailboxes(user.accountId);
   const limit = await mailboxLimitFor(user.accountId);
+  const linkKey = await ensureLinkKey(user.accountId);
   return (
     <div>
       <h1 className="text-lg font-bold">アドレス設定（{boxes.length}/{limit}）</h1>
       <p className="mt-1 text-sm text-slate-500">会社のメールアドレスを登録します。各アドレスは、そのアドレスとパスワードでログインして送受信できます。アドレスは{limit}個まで追加できます（追加は1口2,500円/月で+10個、同じアカウントの中で増えます）。</p>
       {sp?.welcome && <p className="mt-3 rounded bg-emerald-50 px-3 py-2 text-sm text-emerald-700">申込が完了しました。アドレスの受信（IMAP）・送信（SMTP）サーバーを登録すると、そのアドレスで送受信できるようになります。</p>}
+      <div className="mt-4 rounded-xl bg-white p-5 shadow">
+        <h2 className="font-bold">見積・請求書システムとの連動</h2>
+        <p className="mt-1 text-sm text-slate-500">この連動キーを、見積・請求書システムの設定画面「HTMLメールと連動」に入力すると、見積側から送るメールがこのアカウント経由（会社のメール）になります。</p>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <input readOnly value={linkKey} className="w-full max-w-md rounded border border-slate-300 bg-slate-50 px-3 py-1.5 font-mono text-sm" />
+          <form action={regenerateLinkKeyAction}>
+            <button className="rounded border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50">再発行</button>
+          </form>
+        </div>
+        <p className="mt-1 text-xs text-slate-400">再発行すると、以前のキーは使えなくなります。</p>
+      </div>
       {sp?.done && <p className="mt-3 rounded bg-emerald-50 px-3 py-2 text-sm text-emerald-700">保存しました</p>}
       {sp?.error && <p className="mt-3 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{sp.error}</p>}
       <div className="mt-4 space-y-4">

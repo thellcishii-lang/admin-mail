@@ -1,6 +1,38 @@
 import { db, ensureReady } from "@/lib/db";
-import { saveTemplateAction, deleteTemplateAction } from "@/lib/actions";
+import { saveTemplateAction, deleteTemplateAction, createTemplateFromStyleAction } from "@/lib/actions";
 import { requireUser } from "@/lib/auth";
+import { PRESET_STYLES } from "@/lib/styles";
+
+function StyleGallery({ company }) {
+  return (
+    <div className="mt-4 rounded-xl bg-white p-5 shadow">
+      <h2 className="font-bold">スタイルから作る</h2>
+      <p className="mt-1 text-sm text-slate-500">会社の印象に合うスタイルを選ぶと、その色とタグラインで様式が作られます。あとから文言やロゴは自由に変えられます。</p>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {PRESET_STYLES.map((s) => (
+          <div key={s.id} className="overflow-hidden rounded-lg border border-slate-200">
+            <div className="px-4 py-3 text-white" style={{ backgroundColor: s.header_color }}>
+              <p className="text-sm font-bold">{company || "御社ブランド名"}</p>
+              <p className="text-xs opacity-80">{s.tagline}</p>
+            </div>
+            <div className="space-y-2 px-4 py-3">
+              <div className="h-2 w-11/12 rounded bg-slate-200" />
+              <div className="h-2 w-4/5 rounded bg-slate-200" />
+              <div className="h-2 w-3/5 rounded bg-slate-200" />
+            </div>
+            <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2.5">
+              <p className="text-sm"><span className="font-bold">{s.name}</span> <span className="text-xs text-slate-500">{s.mood}</span></p>
+              <form action={createTemplateFromStyleAction}>
+                <input type="hidden" name="style_id" value={s.id} />
+                <button className="rounded bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700">このスタイルで作る</button>
+              </form>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export const dynamic = "force-dynamic";
 
@@ -56,10 +88,13 @@ export default async function TemplatesPage({ searchParams }) {
             footer_email, footer_url, from_address, logo_header, logo_footer, logo_background,
             (logo_base64 <> '') AS has_logo
      FROM mail_templates WHERE account_id = $1 ORDER BY position, id`, [user.accountId]);
+  const { rows: accRows } = await db().query("SELECT name FROM accounts WHERE id = $1", [user.accountId]);
   return (
     <div>
       <h1 className="text-lg font-bold">様式（テンプレート）</h1>
       {sp?.error && <p className="mt-3 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{sp.error}</p>}
+      {sp?.done && <p className="mt-3 rounded bg-emerald-50 px-3 py-2 text-sm text-emerald-700">様式を追加しました。下の一覧から文言やロゴを調整できます。</p>}
+      <StyleGallery company={accRows[0]?.name || ""} />
       <div className="mt-4 space-y-4">
         {rows.map((t) => (
           <details key={t.id} className="rounded-xl bg-white p-5 shadow">

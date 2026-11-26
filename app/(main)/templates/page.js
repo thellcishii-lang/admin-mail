@@ -1,5 +1,6 @@
 import { db, ensureReady } from "@/lib/db";
 import { saveTemplateAction, deleteTemplateAction } from "@/lib/actions";
+import { requireUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,8 @@ function TemplateForm({ template }) {
 
 export default async function TemplatesPage() {
   await ensureReady();
-  const { rows } = await db().query("SELECT * FROM mail_templates ORDER BY position, id");
+  const user = await requireUser();
+  const { rows } = await db().query("SELECT * FROM mail_templates WHERE account_id = $1 ORDER BY position, id", [user.accountId]);
   return (
     <div>
       <h1 className="text-lg font-bold">様式（テンプレート）</h1>

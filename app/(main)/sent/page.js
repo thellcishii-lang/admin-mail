@@ -1,12 +1,17 @@
 import { db, ensureReady } from "@/lib/db";
+import { requireUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function SentPage({ searchParams }) {
   await ensureReady();
+  const user = await requireUser();
   const sp = await searchParams;
+  const scope = user.kind === "mailbox" ? "s.mailbox_id = $1" : "s.account_id = $1";
+  const scopeId = user.kind === "mailbox" ? user.mailboxId : user.accountId;
   const { rows } = await db().query(
-    `SELECT s.*, t.name AS template_name FROM sent_emails s LEFT JOIN mail_templates t ON t.id = s.template_id ORDER BY s.id DESC LIMIT 100`
+    `SELECT s.*, t.name AS template_name FROM sent_emails s LEFT JOIN mail_templates t ON t.id = s.template_id WHERE ${scope} ORDER BY s.id DESC LIMIT 100`,
+    [scopeId]
   );
   return (
     <div>

@@ -1,6 +1,6 @@
 import "./globals.css";
 
-export const metadata = { title: "ADMINメール" };
+export const metadata = { title: "HTMLメール" };
 
 export default function RootLayout({ children }) {
   return (

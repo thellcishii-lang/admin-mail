@@ -20,6 +20,9 @@ export default async function MainLayout({ children }) {
         </div>
         <nav className="space-y-1 px-2">
           <Link href="/" className={link}>受信トレイ</Link>
+          <Link href="/?folder=spam" className={link}>迷惑メール</Link>
+          <Link href="/?folder=trash" className={link}>削除済み</Link>
+          <Link href="/?folder=flagged" className={link}>旗付き</Link>
           <Link href="/compose" className={link}>個別送信</Link>
           <Link href="/broadcast" className={link}>一斉送信</Link>
           <Link href="/sent" className={link}>送信済み</Link>

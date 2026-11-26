@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { listInbox, imapConfigured, NotConfiguredError } from "@/lib/mailbox";
-import { deleteMessageAction } from "@/lib/actions";
+import { inboxBulkAction } from "@/lib/actions";
 import { requireUser } from "@/lib/auth";
 import { visibleMailboxes, pickMailbox } from "@/lib/mailboxes";
+import InboxBulkBar from "@/components/InboxBulkBar";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,7 @@ const FOLDERS = [
   ["inbox", "受信トレイ"],
   ["spam", "迷惑メール"],
   ["trash", "削除済み"],
+  ["flagged", "旗付き"],
 ];
 
 const pill = (active) =>
@@ -79,26 +81,40 @@ export default async function InboxPage({ searchParams }) {
       ) : messages.length === 0 ? (
         <p className="mt-4 text-sm text-slate-500">メールはありません。</p>
       ) : (
-        <ul className="mt-4 divide-y divide-slate-200 rounded-xl bg-white shadow">
-          {messages.map((m) => (
-            <li key={m.uid} className="flex items-stretch hover:bg-slate-50">
-              <Link href={detailQs(m.uid)} className="flex min-w-0 flex-1 items-baseline gap-3 px-4 py-3">
-                <span className={m.seen ? "text-transparent" : "text-sky-500"}>●</span>
-                <span className={`w-56 shrink-0 truncate text-sm ${m.seen ? "text-slate-500" : "font-medium"}`}>{m.from}</span>
-                <span className={`min-w-0 flex-1 truncate text-sm ${m.seen ? "text-slate-500" : "font-medium"}`}>{m.subject}</span>
-                <span className="hidden w-48 shrink-0 truncate text-xs text-slate-400 lg:block">宛先: {m.to}</span>
-                <span className="shrink-0 text-xs text-slate-400">{fmtDate(m.date)}</span>
-              </Link>
-              <form action={deleteMessageAction} className="flex items-center pr-3">
-                <input type="hidden" name="uid" value={m.uid} />
-                <input type="hidden" name="folder" value={folder} />
-                <input type="hidden" name="to" value={address || mailbox?.address || ""} />
-                <input type="hidden" name="back" value={backUrl} />
-                <button title={folder === "trash" ? "完全に削除" : "削除（削除済みへ）"} className="rounded px-2 py-1 text-sm text-slate-400 hover:bg-red-50 hover:text-red-600">削除</button>
-              </form>
-            </li>
-          ))}
-        </ul>
+        <form action={inboxBulkAction}>
+          <input type="hidden" name="folder" value={folder} />
+          <input type="hidden" name="to" value={address || mailbox?.address || ""} />
+          <input type="hidden" name="back" value={backUrl} />
+          <InboxBulkBar folder={folder} />
+          <ul className="mt-3 divide-y divide-slate-200 rounded-xl bg-white shadow">
+            {messages.map((m) => (
+              <li key={m.uid} className="flex items-stretch hover:bg-slate-50">
+                <span className="flex items-center pl-3">
+                  <input type="checkbox" name="uids" value={m.uid} className="h-4 w-4" />
+                </span>
+                <Link href={detailQs(m.uid)} className="flex min-w-0 flex-1 items-baseline gap-3 px-3 py-3">
+                  <span className={m.seen ? "text-transparent" : "text-sky-500"}>●</span>
+                  <span className={`w-56 shrink-0 truncate text-sm ${m.seen ? "text-slate-500" : "font-medium"}`}>{m.from}</span>
+                  <span className={`min-w-0 flex-1 truncate text-sm ${m.seen ? "text-slate-500" : "font-medium"}`}>{m.subject}</span>
+                  <span className="hidden w-48 shrink-0 truncate text-xs text-slate-400 lg:block">宛先: {m.to}</span>
+                  <span className="shrink-0 text-xs text-slate-400">{fmtDate(m.date)}</span>
+                </Link>
+                <span className="flex items-center gap-1 pr-3">
+                  <button type="submit" name="op" value={`flag:${m.uid}`}
+                    title={m.flagged ? "旗をはずす" : "旗をつける（要確認の印）"}
+                    className={`rounded px-2 py-1 text-base ${m.flagged ? "text-amber-500" : "text-slate-300 hover:text-amber-500"}`}>⚑</button>
+                  {folder === "trash" && (
+                    <button type="submit" name="op" value={`restore_one:${m.uid}`} title="受信トレイに戻す"
+                      className="rounded px-2 py-1 text-sm text-slate-400 hover:bg-slate-100 hover:text-slate-700">戻す</button>
+                  )}
+                  <button type="submit" name="op" value={`delete_one:${m.uid}`}
+                    title={folder === "trash" ? "完全に削除" : "削除（削除済みへ）"}
+                    className="rounded px-2 py-1 text-sm text-slate-400 hover:bg-red-50 hover:text-red-600">削除</button>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </form>
       )}
     </div>
   );

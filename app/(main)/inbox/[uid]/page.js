@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getMessage } from "@/lib/mailbox";
-import { deleteMessageAction } from "@/lib/actions";
+import { deleteMessageAction, toggleFlagAction, restoreMessageAction } from "@/lib/actions";
 import { requireUser } from "@/lib/auth";
 import { pickMailbox } from "@/lib/mailboxes";
 
@@ -10,7 +10,7 @@ export default async function MessagePage({ params, searchParams }) {
   const user = await requireUser();
   const { uid } = await params;
   const sp = await searchParams;
-  const folder = ["spam", "trash"].includes(sp?.folder) ? sp.folder : "inbox";
+  const folder = ["spam", "trash", "flagged"].includes(sp?.folder) ? sp.folder : "inbox";
   const mailbox = await pickMailbox(user, sp?.to);
   let message = null, error = null;
   try { message = await getMessage(Number(uid), folder, mailbox); } catch (e) { error = e; }
@@ -23,7 +23,7 @@ export default async function MessagePage({ params, searchParams }) {
   if (folder !== "inbox") backQs.set("folder", folder);
   if (sp?.to) backQs.set("to", sp.to);
   const backHref = backQs.toString() ? `/?${backQs}` : "/";
-  const folderLabel = { inbox: "受信トレイ", spam: "迷惑メール", trash: "削除済み" }[folder];
+  const folderLabel = { inbox: "受信トレイ", spam: "迷惑メール", trash: "削除済み", flagged: "旗付き" }[folder];
   return (
     <div className="rounded-xl bg-white p-6 shadow">
       <Link href={backHref} className="text-sm text-sky-600 hover:underline">← {folderLabel}へ</Link>
@@ -35,6 +35,23 @@ export default async function MessagePage({ params, searchParams }) {
       <pre className="mt-4 whitespace-pre-wrap break-words border-t border-slate-100 pt-4 font-sans text-sm leading-relaxed">{message.text}</pre>
       <div className="mt-6 flex items-center gap-3">
         <Link href={replyHref} className="inline-block rounded bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">返信する</Link>
+        <form action={toggleFlagAction}>
+          <input type="hidden" name="uid" value={message.uid} />
+          <input type="hidden" name="folder" value={folder} />
+          <input type="hidden" name="to" value={sp?.to || mailbox?.address || ""} />
+          <input type="hidden" name="back" value={`/inbox/${message.uid}?${backQs.toString()}`} />
+          <button className={`rounded border px-4 py-2 text-sm ${message.flagged ? "border-amber-300 bg-amber-50 text-amber-600" : "border-slate-300 text-slate-600 hover:bg-slate-50"}`}>
+            {message.flagged ? "⚑ 旗をはずす" : "⚑ 旗をつける"}
+          </button>
+        </form>
+        {folder === "trash" && (
+          <form action={restoreMessageAction}>
+            <input type="hidden" name="uid" value={message.uid} />
+            <input type="hidden" name="to" value={sp?.to || mailbox?.address || ""} />
+            <input type="hidden" name="back" value={backHref} />
+            <button className="rounded border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50">受信トレイに戻す</button>
+          </form>
+        )}
         <form action={deleteMessageAction}>
           <input type="hidden" name="uid" value={message.uid} />
           <input type="hidden" name="folder" value={folder} />

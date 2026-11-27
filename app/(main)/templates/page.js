@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { PRESET_STYLES } from "@/lib/styles";
 import { listImages, parseWatermarkConfig } from "@/lib/images";
 import { TemplatePreviewButton } from "@/components/MailPreview";
+import ImageDropInput from "@/components/ImageDropInput";
 
 function StyleGallery({ company }) {
   return (
@@ -80,7 +81,7 @@ function TemplateForm({ template, images = [], watermarks = [] }) {
             <label className={checkCls}><input type="checkbox" name="logo_remove" value="1" /> ロゴを削除</label>
           </div>
         )}
-        <input name="logo" type="file" accept="image/png,image/jpeg,image/gif,image/webp" className="mt-2 block text-sm" />
+        <ImageDropInput name="logo" label="ロゴ画像" chosenNote="この画像に差し替えます（「更新」を押すと反映）" />
         <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
           <label className={checkCls}><input type="checkbox" name="logo_header" defaultChecked={template?.logo_header} /> ヘッダーに入れる</label>
           <label className={checkCls}><input type="checkbox" name="logo_footer" defaultChecked={template?.logo_footer} /> 一番下（フッター）に入れる</label>
@@ -181,6 +182,7 @@ function TemplateForm({ template, images = [], watermarks = [] }) {
                   <option key={im.id} value={im.id}>{im.name || `画像${im.id}`}</option>
                 ))}
               </select>
+              <ImageDropInput name="footer_image_file" label="フッター画像" chosenNote="この画像を登録して使います（上の選択より優先、「更新」で反映）" />
             </div>
             <div>
               <label className="text-xs font-medium text-slate-500">会社名・ロゴの置き方</label>
@@ -201,7 +203,7 @@ function TemplateForm({ template, images = [], watermarks = [] }) {
               </select>
             </div>
           </div>
-          <p className="mt-1 text-xs text-slate-400">フッター画像は、メール本文の最後（会社名などの署名の上）に、横幅いっぱいに表示される画像です。お店の地図やバナーなどに使います。画像は、作成画面の「本文の画像」から先に登録しておくと選べます。</p>
+          <p className="mt-1 text-xs text-slate-400">フッター画像は、メール本文の最後（会社名などの署名の上）に、横幅いっぱいに表示される画像です。お店の地図やバナーなどに使います。上の枠から新しい画像を登録するか、登録済みの画像から選べます（1MBまで）。</p>
         </div>
       </div>
       <div className="col-span-2">

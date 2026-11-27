@@ -174,7 +174,7 @@ function TemplateForm({ template, images = [], watermarks = [] }) {
               </div>
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-500">フッター画像（本文の下に大きく表示）</label>
+              <label className="text-xs font-medium text-slate-500">フッター画像（署名の上に大きく表示）</label>
               <select name="footer_image_id" defaultValue={String(template?.footer_image_id || "")} className={inputCls}>
                 <option value="">なし</option>
                 {images.map((im) => (
@@ -201,7 +201,7 @@ function TemplateForm({ template, images = [], watermarks = [] }) {
               </select>
             </div>
           </div>
-          <p className="mt-1 text-xs text-slate-400">フッター画像は、作成画面の「本文の画像」から先に登録しておくと選べます。</p>
+          <p className="mt-1 text-xs text-slate-400">フッター画像は、メール本文の最後（会社名などの署名の上）に、横幅いっぱいに表示される画像です。お店の地図やバナーなどに使います。画像は、作成画面の「本文の画像」から先に登録しておくと選べます。</p>
         </div>
       </div>
       <div className="col-span-2">
@@ -237,10 +237,11 @@ export default async function TemplatesPage({ searchParams }) {
       <h1 className="text-lg font-bold">様式（テンプレート）</h1>
       {sp?.error && <p className="mt-3 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{sp.error}</p>}
       {sp?.done && <p className="mt-3 rounded bg-emerald-50 px-3 py-2 text-sm text-emerald-700">様式を追加しました。下の一覧から文言やロゴを調整できます。</p>}
+      {sp?.saved && <p className="mt-3 rounded bg-emerald-50 px-3 py-2 text-sm text-emerald-700">保存しました。開いている様式の「プレビュー」で、そのまま確認できます。</p>}
       <StyleGallery company={accRows[0]?.name || ""} />
       <div className="mt-4 space-y-4">
         {rows.map((t) => (
-          <details key={t.id} className="rounded-xl bg-white p-5 shadow">
+          <details key={t.id} id={`template-${t.id}`} open={Number(sp?.saved) === t.id || Number(sp?.edit) === t.id || undefined} className="rounded-xl bg-white p-5 shadow">
             <summary className="flex cursor-pointer items-center gap-2 font-medium">
               <span className="inline-block h-4 w-4 rounded" style={{ backgroundColor: t.header_color }} />
               {t.name}
